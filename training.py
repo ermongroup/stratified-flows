@@ -140,7 +140,7 @@ def train_base_flow(
     for i in range(n_iters):
         opt_state, g, rng = step(i, opt_state, cs, rng)
 
-        if i % 500 == 0:
+        if i % 1000 == 0:
             ps = get_params(opt_state)
             elbo = compute_base_elbo(ps, cs, objective_fun, dim, 2000, 1e-4, rng)[0]
             # Store the best params as they go

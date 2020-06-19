@@ -40,22 +40,23 @@ def do_bayesian_test():
         big_params = ops.index_update(big_params, ops.index[5:], partial_params[4:])
         return log_integrand(y, x, big_params, sigma)
 
-    print("With 8...")
+    print("Seven-Dimensional Problem:")
+    print("With 8-layer normalizing flow:")
     full_ps, full_cs = train_base_flow(
         10000, 8, vmap(partial_objective_fun), dim=7, tol=tol, lr=3e-5
     )
     variational_denominator, std = compute_base_elbo(
         full_ps, full_cs, vmap(partial_objective_fun), 7, 2000, tol, rng
     )
-    print(variational_denominator, std)
-    print("With 4...")
+    print(f"ELBO is {variational_denominator} pm {std}")
+    print("With 4-layer normalizing flow")
     full_ps, full_cs = train_base_flow(
         10000, 4, vmap(partial_objective_fun), dim=7, tol=1e-4, lr=3e-5
     )
     variational_denominator, std = compute_base_elbo(
         full_ps, full_cs, vmap(partial_objective_fun), 7, 2000, tol, rng
     )
-    print(variational_denominator, std)
+    print(f"ELBO is {variational_denominator} pm {std}")
     rng, _ = random.split(rng, 2)
     joint_denominator, std = do_joint_training(
         vmap(partial_objective_fun),
@@ -73,7 +74,7 @@ def do_bayesian_test():
         save_frequency=100,
         burn_in=4,
     )
-    print(joint_denominator, std)
+    print(f"Our ELBO is {joint_denominator} pm {std}")
 
     ests = []
     num_trials = 40
@@ -99,7 +100,7 @@ def do_bayesian_test():
         l_sums.append(log_summands)
     log_summands = np.concatenate(l_sums)
     estimate = logsumexp(log_summands) - np.log(len(proposal_samples) * num_trials)
-    print(f"Importance Sampled Denominator: {estimate}")
+    print(f"Importance sampling gives: {estimate}")
 
     a_idx = 0
     a_1 = 0
@@ -113,22 +114,24 @@ def do_bayesian_test():
         big_params = ops.index_update(big_params, ops.index[4], b_1)
         return log_integrand(y, x, big_params, sigma)
 
-    print("With 4..")
-    ps, cs = train_base_flow(10000, 12, vmap(partial_objective_fun), 6)
+    print("Six-Dimensional Problem:")
+    print("With 8-layer normalizing flow")
+    ps, cs = train_base_flow(10000, 8, vmap(partial_objective_fun), 6)
     variational_numerator, std = compute_base_elbo(
         ps, cs, vmap(partial_objective_fun), 6, 2000, tol, rng
     )
-    rng, _ = random.split(rng, 2)
-    print("Variational Numerator: {} pm {}".format(variational_numerator, std))
-    small_variational_approach_results[a_idx] = variational_numerator
+    print(f"ELBO is {variational_numerator} pm {std}")
 
+    rng, _ = random.split(rng, 2)
+    small_variational_approach_results[a_idx] = variational_numerator
+    print("With 4-layer normalizing flow")
     print("With 8..")
-    ps, cs = train_base_flow(10000, 16, vmap(partial_objective_fun), 6)
+    ps, cs = train_base_flow(10000, 4, vmap(partial_objective_fun), 6)
     variational_numerator, std = compute_base_elbo(
         ps, cs, vmap(partial_objective_fun), 6, 2000, tol, rng
     )
+    print(f"ELBO is {variational_numerator} pm {std}")
     rng, _ = random.split(rng, 2)
-    print("Variational Numerator: {} pm {}".format(variational_numerator, std))
     full_variational_approach_results[a_idx] = variational_numerator
 
     joint_numerator, std = do_joint_training(
@@ -148,7 +151,7 @@ def do_bayesian_test():
         burn_in=4,
     )
     our_approach_results[a_idx] = joint_numerator
-    print("Joint Numerator: {} pm {}".format(joint_numerator, std))
+    print(f"Our ELBO is {joint_numerator} pm {std}")
 
     ests = []
     num_trials = 40
@@ -174,7 +177,7 @@ def do_bayesian_test():
         l_sums.append(log_summands)
     log_summands = np.concatenate(l_sums)
     estimate = logsumexp(log_summands) - np.log(len(proposal_samples) * num_trials)
-    print(f"Importance Sampled Numerator: {estimate}")
+    print(f"Importance sampling gives: {estimate}")
 
 
 do_bayesian_test()
